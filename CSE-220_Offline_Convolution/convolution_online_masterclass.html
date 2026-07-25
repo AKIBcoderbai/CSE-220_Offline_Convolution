@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convolution Online — Masterclass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAFAF7; --ink:#16324F; --teal:#0E7C6B; --amber:#B36A0B;
+  --red:#8A2D3B; --line:#D8D6CE; --code-bg:#122B42; --code-fg:#E8EEF4;
+  --soft:#EFEDE6;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--paper); color:var(--ink); font-family:'IBM Plex Sans',sans-serif;
+  font-size:16.5px; line-height:1.65; padding-bottom:80px;}
+.wrap{max-width:880px; margin:0 auto; padding:0 22px;}
+header{border-bottom:3px solid var(--ink); padding:44px 0 28px; margin-bottom:8px;}
+.kicker{font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--teal);}
+h1{font-family:'Space Grotesk',sans-serif; font-size:clamp(30px,5vw,44px); line-height:1.1;
+  font-weight:700; margin:8px 0 12px;}
+.sub{color:#4A5A6B; max-width:640px;}
+.stems{display:flex; align-items:flex-end; gap:7px; height:46px; margin-top:20px;}
+.stems i{display:block; width:4px; background:var(--teal); border-radius:2px 2px 0 0;}
+.stems i:nth-child(odd){background:var(--ink);}
+nav{position:sticky; top:0; background:var(--paper); border-bottom:1px solid var(--line);
+  z-index:10; padding:10px 0;}
+nav .wrap{display:flex; flex-wrap:wrap; gap:6px 16px; font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
+nav a{color:var(--ink); text-decoration:none; opacity:.75;}
+nav a:hover, nav a:focus{opacity:1; color:var(--teal);}
+section{padding:44px 0 8px;}
+.ch{display:flex; align-items:baseline; gap:14px; border-bottom:1px solid var(--line);
+  padding-bottom:10px; margin-bottom:22px;}
+.ch .tag{font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:500;
+  color:var(--paper); background:var(--ink); padding:3px 9px; border-radius:3px; letter-spacing:.1em;}
+h2{font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700;}
+h3{font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:500; margin:26px 0 10px;}
+p{margin:0 0 14px;}
+ul,ol{margin:0 0 16px 22px;}
+li{margin-bottom:7px;}
+code{font-family:'IBM Plex Mono',monospace; font-size:.88em; background:var(--soft);
+  padding:1px 5px; border-radius:3px;}
+pre{background:var(--code-bg); color:var(--code-fg); border-radius:8px; padding:16px 18px;
+  overflow-x:auto; margin:0 0 18px; font-size:13.5px; line-height:1.55;
+  border-left:4px solid var(--teal);}
+pre code{background:none; padding:0; color:inherit; font-size:inherit;}
+.cm{color:#8FB3A9;}
+.idbox{background:var(--soft); border:1px solid var(--line); border-left:4px solid var(--ink);
+  border-radius:6px; padding:14px 18px; margin:0 0 18px; font-family:'IBM Plex Mono',monospace;
+  font-size:14.5px;}
+.idbox b{color:var(--teal); font-weight:500;}
+.trap{border-left:4px solid var(--amber);}
+.trap .tt{color:var(--amber); font-family:'IBM Plex Mono',monospace; font-size:12px;
+  text-transform:uppercase; letter-spacing:.12em; display:block; margin-bottom:6px;}
+.danger{border-left-color:var(--red);}
+.danger .tt{color:var(--red);}
+table{border-collapse:collapse; width:100%; margin:0 0 18px; font-size:14.5px;}
+th,td{border:1px solid var(--line); padding:8px 11px; text-align:left; vertical-align:top;}
+th{background:var(--soft); font-family:'Space Grotesk',sans-serif; font-weight:500;}
+td code{white-space:nowrap;}
+details{border:1px solid var(--line); border-radius:8px; margin:0 0 16px; background:#fff;}
+details summary{cursor:pointer; padding:12px 16px; font-family:'Space Grotesk',sans-serif;
+  font-weight:500; color:var(--teal); user-select:none;}
+details[open] summary{border-bottom:1px solid var(--line);}
+details .inner{padding:16px 18px 6px;}
+.prob{background:#fff; border:1px solid var(--line); border-radius:8px; padding:18px 20px 8px;
+  margin:0 0 22px;}
+.prob .ptag{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--paper);
+  background:var(--teal); padding:2px 8px; border-radius:3px; letter-spacing:.08em;}
+.prob h3{margin-top:10px;}
+.check{list-style:none; margin-left:0;}
+.check li{padding-left:28px; position:relative;}
+.check li::before{content:"□"; position:absolute; left:2px; color:var(--teal); font-size:18px; top:-1px;}
+footer{margin-top:60px; border-top:3px solid var(--ink); padding-top:18px;
+  font-family:'IBM Plex Mono',monospace; font-size:13px; color:#4A5A6B;}
+@media (max-width:640px){ body{font-size:15.5px;} pre{font-size:12.5px;} }
+@media print{ nav{display:none;} details{border:none;} details summary{display:none;}
+  details .inner{padding:0;} pre{border:1px solid #ccc; background:#fff; color:#000;} }
+</style>
+</head>
+<body>
+
+<header>
+<div class="wrap">
+  <div class="kicker">CSE 220 · Signals &amp; Linear Systems · Online prep</div>
+  <h1>The Convolution Online Masterclass</h1>
+  <p class="sub">Everything the past three onlines tested, everything the next one is likely to test, and the exact code recipes for your <code>DiscreteSignal</code> / <code>LTISystem</code> implementation — built for a 25–30 minute exam.</p>
+  <div class="stems" aria-hidden="true">
+    <i style="height:12px"></i><i style="height:26px"></i><i style="height:40px"></i><i style="height:33px"></i><i style="height:18px"></i><i style="height:29px"></i><i style="height:44px"></i><i style="height:22px"></i><i style="height:10px"></i>
+  </div>
+</div>
+</header>
+
+<nav aria-label="Sections"><div class="wrap">
+  <a href="#map">00 Your codebase</a>
+  <a href="#ident">01 Identities</a>
+  <a href="#recipes">02 Recipes</a>
+  <a href="#a">03 Online A</a>
+  <a href="#b">04 Online B</a>
+  <a href="#c">05 Online C</a>
+  <a href="#pred">06 Predicted</a>
+  <a href="#traps">07 Traps</a>
+  <a href="#plan">08 Battle plan</a>
+</div></nav>
+
+<div class="wrap">
+
+<!-- ============================================================ -->
+<section id="map">
+<div class="ch"><span class="tag">CH 00</span><h2>Know your own weapons</h2></div>
+<p>Every online reuses your Offline 1 code. The examiner assumes you know your own API cold — the students who lose time are the ones re-reading their own files mid-exam. Memorize this table.</p>
+
+<table>
+<tr><th>Call</th><th>What it gives you</th><th>Exam use</th></tr>
+<tr><td><code>DiscreteSignal(a, b)</code></td><td>All-zero signal over n = a…b</td><td>Blank canvas to fill</td></tr>
+<tr><td><code>sig.get_value_at_time(t)</code></td><td>Value, or <b>0.0 outside range</b></td><td>Free zero-padding — this is why s[−1]=0 "just works"</td></tr>
+<tr><td><code>sig.set_value_at_time(t, v)</code></td><td>Sets value; <b>raises if t outside range</b></td><td>Allocate the full range first, then fill</td></tr>
+<tr><td><code>sig.shift(k)</code></td><td>New signal y[n] = x[n−k]</td><td><code>shift(1)</code> = delay by 1 → gives you x[n−1]</td></tr>
+<tr><td><code>a.add(b)</code></td><td>Sample-wise sum over the <b>combined</b> range</td><td>Parallel systems; building Δx</td></tr>
+<tr><td><code>sig.multiply(c)</code> / <code>c * sig</code></td><td>Scaled copy</td><td><code>.multiply(-1)</code> = negation → subtraction</td></tr>
+<tr><td><code>DiscreteSignal.unit_impulse(k)</code></td><td>δ[n−k]</td><td>Building echo/delay impulse responses</td></tr>
+<tr><td><code>LTISystem(h)</code></td><td>System with impulse response h</td><td>—</td></tr>
+<tr><td><code>system.output(x)</code></td><td>Full convolution x ∗ h</td><td>The workhorse</td></tr>
+<tr><td><code>system.output_by_superposition(x)</code></td><td>Same result via shifted-scaled h copies</td><td>Second method for verification</td></tr>
+<tr><td><code>system.output_range(x)</code></td><td>(x.start + h.start, x.end + h.end)</td><td>Sanity-check output extents</td></tr>
+<tr><td><code>max_absolute_difference(a, b)</code></td><td>Largest |a[n] − b[n]| over combined range</td><td>The "verify both match" mark — always finish with this</td></tr>
+<tr><td><code>sig.plot(title, ax=ax)</code></td><td>Stem plot on an axis</td><td>The plotting marks</td></tr>
+</table>
+
+<div class="idbox trap"><span class="tt">Two subtleties in your own code</span>
+1&#41; <code>shift(k)</code> with <b>positive</b> k moves the signal <b>right</b> (delay). Δx needs x[n−1], which is <code>x.shift(1)</code> — not <code>shift(-1)</code>.<br><br>
+2&#41; <code>add</code> returns a signal over the <b>union</b> of both ranges, so you never manually resize before adding. Chain adds freely.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="ident">
+<div class="ch"><span class="tag">CH 01</span><h2>The six identities that generate every question</h2></div>
+<p>All three past onlines — and almost any variation they can invent — are one of these identities wearing a costume. If you can name which identity a spec is using within the first minute, the coding is mechanical.</p>
+
+<div class="idbox"><b>I1 · Impulse ↔ step:</b>&nbsp; h[n] = s[n] − s[n−1] &nbsp;&nbsp;and&nbsp;&nbsp; s[n] = Σ<sub>k≤n</sub> h[k]<br>
+<span style="color:#4A5A6B">Why: δ[n] = u[n] − u[n−1], and u[n] = Σ δ. LTI systems inherit both relations. (Online A)</span></div>
+
+<div class="idbox"><b>I2 · Difference trick:</b>&nbsp; y = x ∗ h = Δx ∗ s &nbsp; where Δx[n] = x[n] − x[n−1]<br>
+<span style="color:#4A5A6B">Differencing one side of a convolution and integrating the other cancels out. (Online A)</span></div>
+
+<div class="idbox"><b>I3 · Series (cascade) = convolve the h's:</b>&nbsp; x → h₁ → h₂ &nbsp;⇒&nbsp; h_eq = h₁ ∗ h₂<br>
+<span style="color:#4A5A6B">Associativity: (x ∗ h₁) ∗ h₂ = x ∗ (h₁ ∗ h₂). Order never matters. (Online B)</span></div>
+
+<div class="idbox"><b>I4 · Parallel = add the h's:</b>&nbsp; x → h₁, x → h₂, outputs summed &nbsp;⇒&nbsp; h_eq = h₁ + h₂<br>
+<span style="color:#4A5A6B">Distributivity: x ∗ h₁ + x ∗ h₂ = x ∗ (h₁ + h₂). A minus branch just means h₁ − h₂. (Online B)</span></div>
+
+<div class="idbox"><b>I5 · Linearity over inputs:</b>&nbsp; (x₁ + x₂ + …) ∗ h = x₁∗h + x₂∗h + …<br>
+<span style="color:#4A5A6B">Convolve each input separately, add the outputs — or add inputs first. Same answer. (Online C)</span></div>
+
+<div class="idbox"><b>I6 · Impulse identities:</b>&nbsp; x ∗ δ[n] = x &nbsp;&nbsp;and&nbsp;&nbsp; x ∗ δ[n−k] = x[n−k] (a pure shift)<br>
+<span style="color:#4A5A6B">Convolving with a shifted impulse just relocates the signal. The instant sanity check for any system you build.</span></div>
+
+<p>Also always true and worth stating in comments for easy marks: <b>commutativity</b> (x ∗ h = h ∗ x — you proved it via polynomials) and the <b>output range rule</b> (starts add, ends add, length = len(x) + len(h) − 1).</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="recipes">
+<div class="ch"><span class="tag">CH 02</span><h2>The recipe toolbox — memorize these</h2></div>
+<p>Six short helpers cover every past and predicted question. Write them at the top of your exam file in the first three minutes, before you even read the spec twice.</p>
+
+<pre><code><span class="cm"># R1 — subtraction (your API only has add/multiply)</span>
+def subtract(a, b):
+    return a.add(b.multiply(-1.0))
+
+<span class="cm"># R2 — first difference:  Δx[n] = x[n] - x[n-1]</span>
+def first_difference(x):
+    return subtract(x, x.shift(1))
+
+<span class="cm"># R3 — convolve two SIGNALS (e.g. two impulse responses):</span>
+<span class="cm">#      wrap one as a system, feed the other as input</span>
+def convolve(a, b):
+    return LTISystem(a).output(b)
+
+<span class="cm"># R4 — running sum / accumulator: s[n] = sum of h[k] for k &lt;= n</span>
+<span class="cm">#      (step response of h; 'extra' extends the flat tail)</span>
+def running_sum(h, extra=5):
+    s = DiscreteSignal(h.start_time, h.end_time + extra)
+    total = 0.0
+    for n in s.times():
+        total += h.get_value_at_time(n)
+        s.set_value_at_time(n, total)
+    return s
+
+<span class="cm"># R5 — time reversal: y[n] = x[-n]</span>
+def reverse(x):
+    r = DiscreteSignal(-x.end_time, -x.start_time)
+    r.x_n = x.x_n[::-1].copy()
+    return r
+
+<span class="cm"># R6 — the verification + report block (the last mark, every time)</span>
+def verify(y1, y2, label="methods"):
+    d = max_absolute_difference(y1, y2)
+    print(f"Max |difference| between {label}: {d:.12g}")
+    return d</code></pre>
+
+<div class="idbox trap"><span class="tt">Why R3 works</span>
+<code>LTISystem(a).output(b)</code> computes b ∗ a, and convolution is commutative, so it equals a ∗ b. This one-liner is how you build <code>h_combined</code> for any block diagram without writing a new convolution.</div>
+
+<h3>The standard plotting block</h3>
+<pre><code>fig, axes = plt.subplots(3, 1, figsize=(10, 8), constrained_layout=True)
+x.plot("Input x[n]", ax=axes[0])
+h.plot("Impulse response h[n]", ax=axes[1])
+y.plot("Output y[n]", ax=axes[2])
+fig.savefig("result.png", dpi=150)
+plt.close(fig)</code></pre>
+<p>Change the <code>3</code> and the list of signals as needed. With the <code>Agg</code> backend already set in your <code>main.py</code>, always <code>savefig</code> — never rely on <code>plt.show()</code>.</p>
+
+<h3>The standard file-reading block</h3>
+<pre><code>def read_signal_file(path):
+    with open(path, "r", encoding="utf-8") as f:
+        lines = [ln.strip() for ln in f
+                 if ln.strip() and not ln.strip().startswith("#")]
+    start, end = map(int, lines[0].split())
+    values = list(map(float, lines[1].split()))
+    assert len(values) == end - start + 1, "sample count != range length"
+    sig = DiscreteSignal(start, end)
+    sig.x_n = np.array(values, dtype=float)
+    return sig</code></pre>
+<p>This is your existing <code>parse_signal</code> logic packaged for the exam's "one file, one signal" format (Online A used exactly this: line 1 = <code>nstart nend</code>, line 2 = samples). The <code>assert</code> catches the classic silent-misalignment bug.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="a">
+<div class="ch"><span class="tag">CH 03</span><h2>Online A — step response (solved &amp; dissected)</h2></div>
+<p><b>The spec:</b> given s[n] (file) and x[n] (file), recover h[n] = s[n] − s[n−1], compute Δx[n], produce y<sub>s</sub> = Δx ∗ s using only the step response, verify against y<sub>h</sub> = x ∗ h.</p>
+<p><b>Identities used:</b> I1 + I2. The whole exam is four lines of real logic once the recipes exist:</p>
+
+<pre><code>s = read_signal_file("step_response.txt")
+x = read_signal_file("input_signal.txt")
+
+h  = first_difference(s)          <span class="cm"># Task 2: h[n] = s[n] - s[n-1]</span>
+dx = first_difference(x)          <span class="cm"># Task 3: Δx[n]</span>
+
+ys = LTISystem(s).output(dx)      <span class="cm"># Task 4: y = Δx * s  (only the step resp.)</span>
+yh = LTISystem(h).output(x)       <span class="cm"># Task 5: y = x * h   (verification)</span>
+
+verify(ys, yh, "step-response method vs impulse method")</code></pre>
+
+<p>Then one plotting block for s, h, Δx, y<sub>s</sub>, y<sub>h</sub> (a 5-row subplot) and you're done.</p>
+
+<h3>Why the marks were distributed the way they were</h3>
+<ul>
+<li><b>h[n] carried 3 marks</b> because the trap is s[−1]: naïvely looping and indexing <code>s[n-1]</code> at the left edge crashes or misreads. Your <code>get_value_at_time</code> returning 0 outside the range handles it silently — <code>shift</code> + <code>add</code> never touches a raw index. Say so in a comment; examiners reward students who show they saw the edge case.</li>
+<li><b>Range subtlety:</b> <code>s.shift(1)</code> ends one sample later than s, so h's range is [s.start, s.end+1] — the extra final sample is h[end+1] = 0 − s[end], which is <i>correct</i> (the step response is flat afterward only if s has settled; if the file's s is truncated mid-rise, that last negative sample is a real artifact worth mentioning).</li>
+<li><b>y<sub>s</sub> and y<sub>h</sub> have different ranges</b> but identical values — your <code>max_absolute_difference</code> already compares over the combined range, treating missing samples as 0. That's why verification "just works."</li>
+</ul>
+
+<details><summary>Deeper: prove y = Δx ∗ s in two lines (in case they ask "why")</summary><div class="inner">
+<p>Δx ∗ s = (x − x·shift 1) ∗ s = x ∗ s − x ∗ s·shift 1 = x ∗ (s − s[n−1]) = x ∗ h.</p>
+<p>Each step is linearity or time-invariance of convolution. Differencing can hop between the two factors freely — that's the exam's entire theoretical content.</p>
+</div></details>
+</section>
+
+<!-- ============================================================ -->
+<section id="b">
+<div class="ch"><span class="tag">CH 04</span><h2>Online B — block diagrams (solved &amp; dissected)</h2></div>
+<p><b>The spec:</b> x feeds h₁ and h₂ in parallel; their sum feeds h₃; output is y. Compute y by (a) applying the three systems separately, (b) building one equivalent <code>h_combined</code>, then verify both agree.</p>
+<p><b>Identities used:</b> I3 + I4. <code>h_combined = (h₁ + h₂) ∗ h₃</code>.</p>
+
+<pre><code><span class="cm"># Path (a): walk the diagram literally</span>
+y1 = LTISystem(h1).output(x)
+y2 = LTISystem(h2).output(x)
+y_mid = y1.add(y2)                       <span class="cm"># the + junction</span>
+y_a  = LTISystem(h3).output(y_mid)       <span class="cm"># through h3</span>
+
+<span class="cm"># Path (b): collapse the diagram first</span>
+h_combined = convolve(h1.add(h2), h3)    <span class="cm"># (h1 + h2) * h3   [R3!]</span>
+y_b = LTISystem(h_combined).output(x)
+
+verify(y_a, y_b, "separate systems vs h_combined")</code></pre>
+
+<h3>The general algorithm for ANY diagram they draw</h3>
+<ol>
+<li><b>Series chain</b> → convolve the impulse responses (<code>convolve(hA, hB)</code>), in any order.</li>
+<li><b>Parallel branches into a + junction</b> → <code>add</code> the impulse responses. A branch entering with a minus sign → <code>subtract</code>.</li>
+<li><b>Repeat inward-out</b>: collapse the innermost structure first, treat the result as a single block, keep going until one h remains.</li>
+</ol>
+<p>Any feedback-free diagram, no matter how baroque, falls to those three moves. Practice reading a diagram and writing its h_combined as an <i>expression</i> before touching code: the exam diagram above is literally the expression <code>(h1 + h2) * h3</code>.</p>
+
+<div class="idbox trap"><span class="tt">Range check that catches wiring mistakes</span>
+h_combined's range must be (h₁∧h₂ start... math: min start of the sum) + h₃'s start → for signals all starting at 0: start 0, end = max(end₁, end₂) + end₃. If your h_combined is longer or shorter than that, you convolved the wrong pair. Ten-second check, saves five minutes.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="c">
+<div class="ch"><span class="tag">CH 05</span><h2>Online C — Supersignal (solved &amp; dissected)</h2></div>
+<p><b>The spec:</b> a <code>Supersignal</code> class holds several <code>DiscreteSignal</code>s; add <code>LTISystem.output_super</code> returning the output for the superposition.</p>
+<p><b>Identity used:</b> I5 — pure linearity. Two equally valid one-liners; implement one, verify with the other:</p>
+
+<pre><code>class Supersignal:
+    def __init__(self, signals):
+        self.signals = list(signals)
+
+<span class="cm"># In LTISystem — method 1: convolve each, then add the outputs</span>
+def output_super(self, supersignal):
+    total = None
+    for sig in supersignal.signals:
+        y = self.output(sig)
+        total = y if total is None else total.add(y)
+    return total
+
+<span class="cm"># Method 2 (verification): add the inputs first, convolve once</span>
+def output_super_v2(self, supersignal):
+    combined = supersignal.signals[0]
+    for sig in supersignal.signals[1:]:
+        combined = combined.add(sig)
+    return self.output(combined)</code></pre>
+
+<p>Linearity says both produce the same signal — that comparison IS your verification section, and it's also the conceptual point being examined. One sentence in a comment ("equal by linearity of LTI systems") signals you know why, not just how.</p>
+
+<div class="idbox trap"><span class="tt">Edge case worth one defensive line</span>
+An empty <code>signals</code> list: method 1 returns <code>None</code>, method 2 crashes on index [0]. Guard with <code>if not supersignal.signals: raise ValueError("Supersignal is empty")</code>. Cheap robustness marks.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="pred">
+<div class="ch"><span class="tag">CH 06</span><h2>Predicted questions — eight variations, all solved</h2></div>
+<p>The pattern across A, B, C: <i>take one identity, dress it in a scenario, demand two computation paths plus a verification.</i> Here is that pattern applied in every remaining direction. Attempt each before opening the solution.</p>
+
+<!-- V1 -->
+<div class="prob"><span class="ptag">PREDICTED V1</span>
+<h3>Reverse of Online A: given h[n], use the step response</h3>
+<p>You're given h[n] and x[n]. (1) Construct the step response s[n] using only Signal operations. (2) Compute y via y = Δx ∗ s. (3) Verify against x ∗ h.</p>
+<details><summary>Solution</summary><div class="inner">
+<pre><code>s  = running_sum(h, extra=len(x))   <span class="cm"># R4: s[n] = Σ h[k], k ≤ n</span>
+dx = first_difference(x)
+ys = LTISystem(s).output(dx)
+yh = LTISystem(h).output(x)
+verify(ys, yh)</code></pre>
+<p>The one decision: how far to extend s's flat tail. It must cover every output index where Δx ∗ s can be nonzero, so extending by at least len(x) is safe. If s is cut too short, y<sub>s</sub>'s late samples silently drop to 0 and verification fails — the intended trap.</p>
+</div></details></div>
+
+<!-- V2 -->
+<div class="prob"><span class="ptag">PREDICTED V2</span>
+<h3>Pure cascade: x → h₁ → h₂ → h₃ → y</h3>
+<p>Compute y by chaining the three systems, then via a single equivalent system, then verify. Bonus: show the chaining order doesn't matter.</p>
+<details><summary>Solution</summary><div class="inner">
+<pre><code>y_a = LTISystem(h3).output(LTISystem(h2).output(LTISystem(h1).output(x)))
+
+h_eq = convolve(convolve(h1, h2), h3)     <span class="cm"># associativity (I3)</span>
+y_b = LTISystem(h_eq).output(x)
+verify(y_a, y_b)
+
+<span class="cm"># bonus: any order of collapsing gives the same h_eq</span>
+h_alt = convolve(h1, convolve(h2, h3))
+print(max_absolute_difference(h_eq, h_alt))   <span class="cm"># 0</span></code></pre>
+</div></details></div>
+
+<!-- V3 -->
+<div class="prob"><span class="ptag">PREDICTED V3</span>
+<h3>Diagram with a minus branch</h3>
+<p>x feeds h₁ and h₂; the junction computes (branch1 − branch2); the result feeds h₃. Find h_combined, compute both ways, verify.</p>
+<details><summary>Solution</summary><div class="inner">
+<pre><code>h_combined = convolve(subtract(h1, h2), h3)   <span class="cm"># (h1 − h2) * h3</span>
+
+y_a = LTISystem(h3).output(
+        subtract(LTISystem(h1).output(x), LTISystem(h2).output(x)))
+y_b = LTISystem(h_combined).output(x)
+verify(y_a, y_b)</code></pre>
+<p>Nothing new — a minus junction is just I4 with a −1 coefficient. Note that if h₁ = h₂ the whole system annihilates every input (h_combined ≡ 0); a cute follow-up question they could ask.</p>
+</div></details></div>
+
+<!-- V4 -->
+<div class="prob"><span class="ptag">PREDICTED V4</span>
+<h3>Parallel-of-series: (h₁→h₂) in parallel with (h₃→h₄)</h3>
+<p>Two cascades run side by side and their outputs are summed. Collapse to one system, verify both paths.</p>
+<details><summary>Solution</summary><div class="inner">
+<pre><code>h_combined = convolve(h1, h2).add(convolve(h3, h4))   <span class="cm"># h1*h2 + h3*h4</span>
+
+y_a = LTISystem(h2).output(LTISystem(h1).output(x)).add(
+      LTISystem(h4).output(LTISystem(h3).output(x)))
+y_b = LTISystem(h_combined).output(x)
+verify(y_a, y_b)</code></pre>
+<p>Inner structures first (each series → one h), then the outer parallel (add). That's the CH 04 algorithm verbatim — the diagram just nests one level deeper than Online B did.</p>
+</div></details></div>
+
+<!-- V5 -->
+<div class="prob"><span class="ptag">PREDICTED V5</span>
+<h3>Echo system built from impulses</h3>
+<p>Build the echo system h[n] = δ[n] + 0.6·δ[n−4] using only <code>unit_impulse</code>. Show (a) convolving x with δ[n−4] equals <code>x.shift(4)</code>, and (b) the echo output equals x + 0.6·x.shift(4).</p>
+<details><summary>Solution</summary><div class="inner">
+<pre><code>h = DiscreteSignal.unit_impulse(0).add(
+        DiscreteSignal.unit_impulse(4).multiply(0.6))
+
+<span class="cm"># (a) shifted-impulse identity (I6)</span>
+y_shift = LTISystem(DiscreteSignal.unit_impulse(4)).output(x)
+verify(y_shift, x.shift(4), "conv with δ[n-4] vs shift(4)")
+
+<span class="cm"># (b) echo two ways</span>
+y_conv   = LTISystem(h).output(x)
+y_direct = x.add(x.shift(4).multiply(0.6))
+verify(y_conv, y_direct, "echo via conv vs via shift+add")</code></pre>
+<p>This is the "do you actually understand what convolution with an impulse does" question. It's also the fastest possible sanity test for any system you write: feed <code>unit_impulse(0)</code> in, and the output must equal h itself.</p>
+</div></details></div>
+
+<!-- V6 -->
+<div class="prob"><span class="ptag">PREDICTED V6</span>
+<h3>Correlation via convolution (the flip returns!)</h3>
+<p>Add a method computing the cross-correlation r[n] = Σ<sub>k</sub> x[k]·h[k−n] using your existing convolution code plus a <code>reverse</code> operation.</p>
+<details><summary>Solution</summary><div class="inner">
+<pre><code>def correlate(x, h):
+    return LTISystem(reverse(h)).output(x)   <span class="cm"># x * h[-n]  (R5 + R3)</span></code></pre>
+<p>Correlation is convolution <i>without</i> the flip — so pre-flipping h and then convolving (which flips it back) yields correlation. You personally hit this exact confusion in Practice Problem 1, when your hand computation produced [1, 1, 0, 4] (the correlation) instead of [2, −1, 3, 2] (the convolution). Now the bug you made by accident becomes a feature you implement on purpose. If this appears, it's worth easy marks to you specifically.</p>
+</div></details></div>
+
+<!-- V7 -->
+<div class="prob"><span class="ptag">PREDICTED V7</span>
+<h3>Weighted Supersignal</h3>
+<p>Extend Online C: <code>Supersignal</code> now also stores coefficients, representing a·x₁ + b·x₂ + …. Implement <code>output_super</code> honoring the weights, verify both linearity directions.</p>
+<details><summary>Solution</summary><div class="inner">
+<pre><code>class Supersignal:
+    def __init__(self, signals, coefficients=None):
+        self.signals = list(signals)
+        self.coefficients = (list(coefficients) if coefficients
+                             else [1.0] * len(self.signals))
+
+def output_super(self, ss):
+    total = None
+    for c, sig in zip(ss.coefficients, ss.signals):
+        y = self.output(sig).multiply(c)      <span class="cm"># c·(x*h) = (c·x)*h</span>
+        total = y if total is None else total.add(y)
+    return total</code></pre>
+<p>Whether you scale the input before convolving or the output after is irrelevant — scalar multiplication commutes with convolution. Verify by computing it the other way (scale inputs, add, convolve once).</p>
+</div></details></div>
+
+<!-- V8 -->
+<div class="prob"><span class="ptag">PREDICTED V8</span>
+<h3>Inverse systems: difference then accumulate</h3>
+<p>Feed x through the first-difference system (h_d: 1, −1), then through the accumulator. Show you recover x exactly. Explain via impulse responses.</p>
+<details><summary>Solution</summary><div class="inner">
+<pre><code>h_d  = impulse_first_difference()             <span class="cm"># from your main.py</span>
+y1   = LTISystem(h_d).output(x)               <span class="cm"># Δx</span>
+y2   = running_sum(y1, extra=0)               <span class="cm"># accumulate it back</span>
+verify(y2, x, "difference→accumulate vs original")</code></pre>
+<p>Why: the cascade's equivalent impulse response is h_d ∗ u[n] — and accumulating (1, −1) gives (1, 0, 0, …) = δ[n]. A system whose combined h is δ[n] is the identity (I6). Two systems whose convolution is δ are called <b>inverse systems</b> — if the term appears in the spec, this is what it means.</p>
+</div></details></div>
+
+<h3>Hand-computation drills (they sometimes ask you to pre-verify on paper)</h3>
+<ul>
+<li>h = (1, 1) at n=0,1 → s = (1, 2, 2, 2, …). Check: difference s back → (1, 1, 0, 0…). ✓</li>
+<li>x = (1, 2) ∗ h = (1, 1) → y = (1, 3, 2). Ranges: 0..1 conv 0..1 → 0..2. ✓</li>
+<li>(h₁+h₂)∗h₃ with h₁=δ[n], h₂=δ[n−1], h₃=(1,1): (1,1)∗(1,1) = (1,2,1). ✓</li>
+<li>Echo δ[n]+0.5δ[n−2] applied to x=(2,4): y = (2, 4, 1, 2). ✓</li>
+</ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="traps">
+<div class="ch"><span class="tag">CH 07</span><h2>Traps — including two live bugs in your uploaded code</h2></div>
+
+<div class="idbox danger"><span class="tt">Bug 1 · unit_step has an integer dtype</span>
+In <code>signal_lti.py</code>: <code>temp.x_n = np.ones_like(temp.n)</code>. Since <code>temp.n</code> is an <b>int</b> array, x_n becomes int — any later <code>set_value_at_time(t, 0.5)</code> silently truncates to 0. Fix tonight:<br><br>
+<code>temp.x_n = np.ones(len(temp.n), dtype=float)</code></div>
+
+<div class="idbox danger"><span class="tt">Bug 2 · INF = 10000 makes unit_step explosive</span>
+<code>unit_step</code> creates a 10001-sample signal. Convolve that with anything and you loop ~10⁸ times in pure Python — your exam machine will hang. If a question needs u[n], <b>don't</b> use <code>unit_step</code>; build a finite step over exactly the range you need, or use <code>running_sum</code> on δ. At minimum, drop INF to ~100 for the exam.</div>
+
+<div class="idbox trap"><span class="tt">Trap · shift direction</span>
+<code>shift(1)</code> produces x[n−1] (delay/right). Getting this backwards flips h = s − s[n−1] into s[n+1] − s, which "looks plausible" in plots and silently fails verification. When in doubt, test on <code>unit_impulse(0)</code>: <code>shift(1)</code> must move the spike to n=1.</div>
+
+<div class="idbox trap"><span class="tt">Trap · float comparison</span>
+Never <code>if y1 == y2</code> or <code>np.array_equal</code>. Two mathematically equal paths differ by ~1e-16 after different operation orders. Always <code>max_absolute_difference &lt; 1e-9</code>.</div>
+
+<div class="idbox trap"><span class="tt">Trap · sample count vs range</span>
+<code>make_signal(0, 4, [1,2,3])</code> — 5-slot range, 3 values — currently succeeds and corrupts silently (length-3 array under a length-5 index range). Keep the <code>assert</code> from the CH 02 reading block.</div>
+
+<div class="idbox trap"><span class="tt">Trap · set_value_at_time out of range raises</span>
+When building a result manually, allocate the <b>full</b> output range first (starts add, ends add). If you see IndexError mid-exam, your target signal's range is too small — don't "fix" it by catching the exception.</div>
+
+<div class="idbox trap"><span class="tt">Trap · numpy.convolve is banned</span>
+Online A said it explicitly. Assume it's banned always — everything must route through your <code>LTISystem</code>. (After the exam, comparing against <code>np.convolve(x.x_n, h.x_n)</code> is a great private test.)</div>
+
+<div class="idbox trap"><span class="tt">Trap · reusing mutable signals</span>
+Your <code>shift</code>/<code>multiply</code>/<code>add</code> correctly return copies — but direct <code>sig.x_n = other.x_n</code> (no <code>.copy()</code>) aliases the arrays, so editing one edits both. You did it right inside the class; keep doing <code>.copy()</code> in any new helper (note <code>reverse</code> in R5 does).</div>
+
+<h3>Sixty-second pre-submission checklist</h3>
+<ul class="check">
+<li>Ran the file top to bottom once, fresh, no errors</li>
+<li>Max absolute difference printed and is &lt; 1e-9</li>
+<li>Every plot the spec asked for is savefig'd (count them against the marks table)</li>
+<li>Output ranges match the (starts add, ends add) rule</li>
+<li>Fed unit_impulse(0) through the final system → output equals h_combined</li>
+<li>File renamed to your student ID exactly as the spec demands</li>
+</ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="plan">
+<div class="ch"><span class="tag">CH 08</span><h2>The 30-minute battle plan</h2></div>
+<table>
+<tr><th>Time</th><th>Action</th></tr>
+<tr><td>0–3 min</td><td>Paste your Offline 1 files in. Type the six recipes (R1–R6) from memory at the top. Read the spec twice.</td></tr>
+<tr><td>3–5 min</td><td>Name the identity (I1–I6) the spec is using. Write h_combined / the target formula as a one-line comment before any code.</td></tr>
+<tr><td>5–15 min</td><td>Path 1: the "literal" computation the spec describes. Print intermediate signals with <code>nonzero_samples()</code> as you go — don't code blind.</td></tr>
+<tr><td>15–22 min</td><td>Path 2: the alternative method. Call <code>verify</code>. If nonzero: check shift direction first, then ranges, then dtype.</td></tr>
+<tr><td>22–27 min</td><td>Plots — one subplot figure, every signal the marks table names, savefig.</td></tr>
+<tr><td>27–30 min</td><td>The sixty-second checklist. Rename. Submit with minutes to spare, not seconds.</td></tr>
+</table>
+<p style="margin-top:8px">One last mindset note: every one of these onlines is a <i>verification sandwich</i> — compute a thing two ways, show they agree. If you're ever lost mid-exam, ask "what are the two ways?" and the structure of the whole solution reappears.</p>
+</section>
+
+<footer>
+CSE 220 · Convolution online prep · Built from Onlines A/B/C (Jan 2026) + your Offline 1 codebase · Good luck tomorrow.
+</footer>
+
+</div>
+</body>
+</html>
